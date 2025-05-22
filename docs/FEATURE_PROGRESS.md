@@ -102,5 +102,11 @@
   - [ ] Hover and active states (partially implemented)
   - [ ] Success/error notifications (partially implemented)
 
-**Last Updated:** 2023-12-05
+## Bug Fixes & Refinements (2024-10-07)
+- [x] **API Route Fix:** Resolved `params.id` access error in `/api/content-items/[id]` dynamic route by correctly awaiting `params` object (Next.js 15 compatibility).
+- [x] **Edit Modal UX:** Improved user experience for opening the edit modal:
+  - [x] Prevented full page refresh on edit icon click by adding `type="button"` and `e.preventDefault()` to the button.
+  - [x] Eliminated brief loading flash of all Kanban columns by removing unnecessary global loading state updates in `handleEditItem` function.
+
+**Last Updated:** 2024-10-07
 **Next Up:** Completing Interactive Board Features (Phase 4) and enhancing UX with notifications 

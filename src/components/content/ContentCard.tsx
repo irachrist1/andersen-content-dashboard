@@ -23,7 +23,11 @@ export const ContentCard: React.FC<ContentCardProps> = ({ item, onEdit }) => {
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-medium text-gray-900 line-clamp-2">{item.title}</h3>
         <button
-          onClick={() => onEdit(item.id)}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onEdit(item.id);
+          }}
           className="text-gray-400 hover:text-gray-600"
           aria-label="Edit content"
         >

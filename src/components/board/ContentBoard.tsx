@@ -67,7 +67,6 @@ export const ContentBoard: React.FC = () => {
   // Handle edit button click
   const handleEditItem = async (id: string) => {
     try {
-      setIsLoading(true);
       setError(null);
       
       const response = await fetch(`/api/content-items/${id}`);
@@ -84,8 +83,6 @@ export const ContentBoard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching content item for edit:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
-    } finally {
-      setIsLoading(false);
     }
   };
 
