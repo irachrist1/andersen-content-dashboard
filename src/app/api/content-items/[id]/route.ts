@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { ContentItem } from '@/lib/database.types';
 
 // Helper to validate content item data
-function validateContentItem(data: any) {
+function validateContentItem(data: Partial<ContentItem>) {
   const errors = [];
   
   if (!data.title) errors.push('Title is required');
@@ -129,7 +130,7 @@ export async function DELETE(
     }
     
     // Check if the item exists first
-    const { data: existingItem, error: checkError } = await supabase
+    const { data: _existingItem, error: checkError } = await supabase
       .from('content_items')
       .select('id')
       .eq('id', id)

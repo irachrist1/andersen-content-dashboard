@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { ContentItem } from '@/lib/database.types';
 
 // Helper function to validate content item data
-function validateContentItem(data: any) {
+function validateContentItem(data: Partial<ContentItem>) {
   const errors = [];
   
   if (!data.title) errors.push('Title is required');
@@ -20,7 +21,7 @@ function validateContentItem(data: any) {
 }
 
 // GET handler to fetch all content items
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('content_items')

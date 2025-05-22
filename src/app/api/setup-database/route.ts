@@ -118,7 +118,7 @@ export async function GET() {
     ];
 
     // Create table
-    const { error: tableError } = await supabase.rpc('pgsl_sql', { query: createTableSQL }).catch(e => {
+    const { error: tableError } = await supabase.rpc('pgsl_sql', { query: createTableSQL }).catch(_e => {
       // Fallback: Try direct query
       return supabase.from('content_items').select('count(*)').limit(1);
     });

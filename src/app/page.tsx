@@ -17,7 +17,7 @@ export default function Home() {
         } else {
           setDatabaseError(false);
         }
-      } catch (error) {
+      } catch (_error) {
         setDatabaseError(true);
       }
     };

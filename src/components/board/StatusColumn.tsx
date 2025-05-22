@@ -8,7 +8,7 @@ interface StatusColumnProps {
 }
 
 export const StatusColumn: React.FC<StatusColumnProps> = ({ 
-  status,
+  status: _status,
   title,
   children 
 }) => {

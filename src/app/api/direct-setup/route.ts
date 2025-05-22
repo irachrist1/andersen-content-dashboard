@@ -16,7 +16,7 @@ export async function GET() {
     );
 
     // Direct queries to create table (without needing RPC)
-    const tableExistsQuery = `
+    const _tableExistsQuery = `
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public'
@@ -25,7 +25,7 @@ export async function GET() {
     `;
 
     // Check if table exists first
-    const { data: tableCheck, error: checkError } = await supabaseAdmin
+    const { data: _tableCheck, error: _checkError } = await supabaseAdmin
       .from('_content_items_check')
       .select('*')
       .limit(1)
@@ -33,7 +33,7 @@ export async function GET() {
 
     // Because we don't have direct SQL execution without RPC, let's create the table using data API
     // Step 1: Create the table if it doesn't exist
-    const { error: createError } = await supabaseAdmin
+    const { error: _createError } = await supabaseAdmin
       .from('content_items')
       .insert([{ 
         title: 'Setup Row', 
