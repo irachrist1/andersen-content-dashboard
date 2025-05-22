@@ -33,7 +33,7 @@ export async function GET() {
 
     // Because we don't have direct SQL execution without RPC, let's create the table using data API
     // Step 1: Create the table if it doesn't exist
-    await supabaseAdmin
+    const { error: initialInsertError } = await supabaseAdmin
       .from('content_items')
       .insert([{ 
         title: 'Setup Row', 
@@ -42,11 +42,13 @@ export async function GET() {
         status: 'Idea' 
       }])
       .select()
-      .limit(1)
-      .catch(err => {
-        // If the table doesn't exist, this will error
-        return { error: err };
-      });
+      .limit(1);
+
+    if (initialInsertError) {
+      // Log the error, but proceed, as the table might still be created by this attempt
+      // or subsequent operations will handle it.
+      console.warn('Initial setup row insert failed (table might not exist yet):', initialInsertError.message);
+    }
 
     // Sample data
     const sampleData = [
