@@ -18,9 +18,14 @@ interface SamplePost {
   // other fields like mentions can be ignored for ContentItem
 }
 
+interface CompanyLinks {
+  linkedin_posts: string[];
+}
+
 interface SampleSizeData {
   posts: SamplePost[];
-  // company_links and company_description can be ignored
+  company_links?: CompanyLinks;         // Added to reflect actual data structure
+  company_description?: string;       // Added to reflect actual data structure
 }
 
 export async function GET() {
