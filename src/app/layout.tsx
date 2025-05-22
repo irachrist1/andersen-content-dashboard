@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "ContentFlow",
   description: "A content planning and management application",
   icons: {
-    icon: '/favicon.ico',
+    icon: '/images/Picture12.png',
   },
 };
 
