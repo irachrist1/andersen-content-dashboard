@@ -1,4 +1,16 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ContentFlow: Content Planning and Management Application
+
+ContentFlow is a web application designed to help users plan, track, and manage their content creation workflow. It provides a visual Kanban-style board where content items can be organized by status (e.g., Inbox, Pending Review, Scheduled, Done).
+
+## Key Features
+
+*   **Visual Content Board:** Organize content items across different stages of your workflow.
+*   **CRUD Operations:** Easily create, read, update, and delete content items.
+*   **Drag & Drop:** Intuitively move content items between statuses.
+*   **Status Tracking:** Keep track of content progress from idea to completion.
+*   **API Integration:** Leverages a backend API for data management.
+
+Built with [Next.js](https://nextjs.org), [React](https://reactjs.org/), and [Tailwind CSS](https://tailwindcss.com/).
 
 ## Getting Started
 
