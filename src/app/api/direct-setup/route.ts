@@ -7,6 +7,7 @@ interface SamplePostContent {
   link?: string;
   hashtags?: string[]; // Added to reflect actual data structure
   images?: string[];   // Added to reflect actual data structure
+  mentions?: string[]; // Added to reflect actual data structure
   // other fields like hashtags, images can be ignored for ContentItem
 }
 
