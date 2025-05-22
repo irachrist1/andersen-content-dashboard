@@ -1,5 +1,5 @@
-export type Platform = 'Blog' | 'Instagram' | 'Twitter' | 'TikTok' | 'YouTube';
-export type Status = 'Idea' | 'InProgress' | 'Review' | 'Done';
+export type Platform = 'LinkedIn' | 'Website';
+export type Status = 'Inbox' | 'PendingReview' | 'Scheduled' | 'Done';
 
 export interface ContentItem {
   id: string;
@@ -11,6 +11,8 @@ export interface ContentItem {
   status: Status;
   post_url?: string | null;
   suggested_post_time?: string | null;
+  post_date?: string | null;
+  target_date?: string | null;
 }
 
 export interface Database {

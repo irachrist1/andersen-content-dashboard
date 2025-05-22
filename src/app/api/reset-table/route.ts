@@ -3,82 +3,100 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    // Sample data - same as in other routes
+    // Sample data for Andersen in Rwanda
     const sampleData = [
+      // Pending Review items
       {
-        title: 'How to Start a Blog',
-        description: 'A comprehensive guide for beginners on starting their first blog.',
-        platform: 'Blog',
-        status: 'Idea',
+        title: 'Claude\'s IFRS piece',
+        description: 'Detailed analysis of International Financial Reporting Standards relevant to the Rwanda market.',
+        platform: 'LinkedIn',
+        status: 'PendingReview',
       },
       {
-        title: '10 Tips for Better Photography',
-        description: 'Essential tips to improve your Instagram photography skills.',
-        platform: 'Instagram',
-        status: 'Idea',
+        title: 'Ruth\'s IFRS piece',
+        description: 'Exploration of IFRS implementation challenges and solutions for businesses in East Africa.',
+        platform: 'LinkedIn',
+        status: 'PendingReview',
       },
       {
-        title: 'Trending Tech News',
-        description: 'A roundup of the latest technology news and updates.',
-        platform: 'Twitter',
-        status: 'Idea',
+        title: 'Norman\'s IFRS piece',
+        description: 'Overview of recent changes to IFRS standards and their impact on Rwandan companies.',
+        platform: 'LinkedIn',
+        status: 'PendingReview',
       },
       {
-        title: 'Social Media Marketing Trends 2023',
-        description: 'Analysis of the top social media marketing trends for 2023.',
-        platform: 'Blog',
-        status: 'InProgress',
+        title: 'Hajara\'s article',
+        description: 'Upcoming article on finance and accounting trends in Rwanda - topic to be confirmed.',
+        platform: 'LinkedIn',
+        status: 'PendingReview',
       },
+      
+      // Scheduled item
       {
-        title: 'Behind the Scenes Office Tour',
-        description: 'A walkthrough of our office space and team.',
-        platform: 'TikTok',
-        status: 'InProgress',
+        title: 'May Office Highlights Post',
+        description: 'Feature images/mentions of: pottery coffee visit, Andersen Africa New Managers School hosted in Kigali, talk with KIFC & Andersen Africa, ACOA sponsorship.',
+        platform: 'LinkedIn',
+        status: 'Scheduled',
+        suggested_post_time: 'Late May 2025',
       },
+      
+      // Done items with past LinkedIn posts
       {
-        title: 'Product Launch Announcement',
-        description: 'Teaser for our upcoming product launch next month.',
-        platform: 'Instagram',
-        status: 'InProgress',
-      },
-      {
-        title: 'Summer Fashion Lookbook',
-        description: 'Showcasing our summer fashion collection with styling tips.',
-        platform: 'YouTube',
-        status: 'Review',
-      },
-      {
-        title: 'Customer Success Stories',
-        description: 'Interviews with customers about their success with our products.',
-        platform: 'Blog',
-        status: 'Review',
-      },
-      {
-        title: 'Quick Tutorial: New Features',
-        description: 'A quick tutorial on how to use our newest features.',
-        platform: 'TikTok',
-        status: 'Review',
-      },
-      {
-        title: 'Annual Industry Report',
-        description: 'Complete breakdown of industry statistics and trends for the past year.',
-        platform: 'Blog',
+        title: 'Celebrating Our Team Members',
+        description: 'Congratulations to Norman, Leonard and Sandra who are now ACCA qualified! To more qualifications and professional growth.',
+        platform: 'LinkedIn',
         status: 'Done',
-        post_url: 'https://example.com/blog/annual-industry-report',
+        post_date: '2025-05-19',
       },
       {
-        title: 'Holiday Gift Guide',
-        description: 'Curated selection of holiday gift ideas for different budgets.',
-        platform: 'Instagram',
+        title: '2024 ACOA Conference',
+        description: 'We are a proud sponsor of this year\'s Africa Congress of Accountants (ACOA) happening May 15th-17th. Meet us at our booth to learn more about our services.',
+        platform: 'LinkedIn',
         status: 'Done',
-        post_url: 'https://instagram.com/p/example-holiday-gift-guide',
+        post_date: '2025-05-14',
       },
       {
-        title: 'Product Demo Video',
-        description: 'Detailed demonstration of our flagship product.',
-        platform: 'YouTube',
+        title: 'SPURT Hub Partnership',
+        description: 'We are excited to partner with SPURT Hub to support the growth of small businesses in Rwanda through tailored accounting and advisory services.',
+        platform: 'LinkedIn',
         status: 'Done',
-        post_url: 'https://youtube.com/watch?v=example-product-demo',
+        post_date: '2025-05-10',
+      },
+      {
+        title: 'Best Places to Work Award',
+        description: 'We are honored to be named one of the Best Places to Work in Rwanda for the second consecutive year!',
+        platform: 'LinkedIn',
+        status: 'Done',
+        post_date: '2025-05-07',
+      },
+      {
+        title: 'Leadership Team Retreat',
+        description: 'Our leadership team recently completed a strategic planning retreat to set our vision for the next five years. Exciting developments coming soon!',
+        platform: 'LinkedIn',
+        status: 'Done',
+        post_date: '2025-05-03',
+      },
+      {
+        title: 'Kigali Financial Center Collaboration',
+        description: 'We are thrilled to announce our new collaboration with the Kigali International Financial Center to strengthen Rwanda\'s position as a leading financial hub in Africa.',
+        platform: 'LinkedIn',
+        status: 'Done',
+        post_date: '2025-04-29',
+        post_url: 'https://www.linkedin.com/posts/andersen-rwanda_kigali-financial-center-collaboration-activity-7012345678901234567-abcd',
+      },
+      {
+        title: 'Tax Season Tips',
+        description: 'As tax filing deadlines approach, our experts share top five tips to ensure compliance and optimize your tax position.',
+        platform: 'LinkedIn',
+        status: 'Done',
+        post_date: '2025-04-26',
+      },
+      {
+        title: 'New Office Tour',
+        description: 'Take a virtual tour of our newly expanded office space in Kigali, designed to foster collaboration and innovation.',
+        platform: 'LinkedIn',
+        status: 'Done',
+        post_date: '2025-04-23',
       },
     ];
 

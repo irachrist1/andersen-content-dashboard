@@ -9,12 +9,12 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   if (!data.title) errors.push('Title is required');
   if (!data.description) errors.push('Description is required');
   
-  if (!data.platform || !['Blog', 'Instagram', 'Twitter', 'TikTok', 'YouTube'].includes(data.platform)) {
-    errors.push('Platform must be one of: Blog, Instagram, Twitter, TikTok, YouTube');
+  if (!data.platform || !['LinkedIn', 'Website'].includes(data.platform)) {
+    errors.push('Platform must be one of: LinkedIn, Website');
   }
   
-  if (!data.status || !['Idea', 'InProgress', 'Review', 'Done'].includes(data.status)) {
-    errors.push('Status must be one of: Idea, InProgress, Review, Done');
+  if (!data.status || !['Inbox', 'PendingReview', 'Scheduled', 'Done'].includes(data.status)) {
+    errors.push('Status must be one of: Inbox, PendingReview, Scheduled, Done');
   }
   
   return errors;
@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
       platform: contentItem.platform,
       status: contentItem.status,
       post_url: contentItem.post_url || null,
-      suggested_post_time: contentItem.suggested_post_time || null
+      suggested_post_time: contentItem.suggested_post_time || null,
+      post_date: contentItem.post_date || null,
+      target_date: contentItem.target_date || null
     };
     
     // Insert data

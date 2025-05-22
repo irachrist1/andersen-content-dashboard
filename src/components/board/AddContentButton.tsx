@@ -10,10 +10,12 @@ export const AddContentButton: React.FC<AddContentButtonProps> = ({ onClick }) =
   return (
     <button
       onClick={onClick}
-      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors flex items-center gap-1"
-      aria-label="Add new content"
+      className="inline-flex items-center px-4 py-2 bg-brand-primary text-white font-medium rounded-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition duration-150"
     >
-      <span className="text-lg">+</span> Add Content
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 3a1 1 0 00-1 1v5H4a1 1 0 100 2h5v5a1 1 0 102 0v-5h5a1 1 0 100-2h-5V4a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      Add Content
     </button>
   );
 }; 
