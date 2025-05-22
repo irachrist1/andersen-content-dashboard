@@ -66,7 +66,8 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, ite
       try {
         // Simulate API call delay
         setTimeout(() => {
-          const data = getUrlMetadata(item.post_url || '', item.platform);
+          const platformString = item.platform && item.platform.length > 0 ? item.platform[0] : 'Website';
+          const data = getUrlMetadata(item.post_url || '', platformString);
           setMetadata(data);
           setIsLoading(false);
         }, 800);
@@ -158,7 +159,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({ isOpen, onClose, ite
               rel="noopener noreferrer" 
               className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-secondary inline-flex items-center gap-1 transition-colors"
             >
-              Visit {item.platform}
+              Visit {item.platform && item.platform.length > 0 ? item.platform[0] : 'Link'}
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
