@@ -83,7 +83,7 @@ export async function GET() {
     ];
 
     // Step 1: Delete all content items if the table exists
-    const { error: _deleteError } = await supabase
+    await supabase
       .from('content_items')
       .delete()
       .not('id', 'is', null); // This will delete all rows

@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { ContentItem } from '@/lib/database.types';
 
 // Helper function to validate content item data
-function validateContentItem(data: Partial<ContentItem>) {
-  const errors = [];
+function validateContentItem(data: Partial<ContentItem>): string[] {
+  const errors: string[] = [];
   
   if (!data.title) errors.push('Title is required');
   if (!data.description) errors.push('Description is required');
@@ -21,6 +21,7 @@ function validateContentItem(data: Partial<ContentItem>) {
 }
 
 // GET handler to fetch all content items
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
     const { data, error } = await supabase

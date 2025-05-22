@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { ContentItem } from '@/lib/database.types';
 
 // Helper to validate content item data
-function validateContentItem(data: Partial<ContentItem>) {
-  const errors = [];
+function validateContentItem(data: Partial<ContentItem>): string[] {
+  const errors: string[] = [];
   
   if (!data.title) errors.push('Title is required');
   if (!data.description) errors.push('Description is required');
@@ -130,7 +130,7 @@ export async function DELETE(
     }
     
     // Check if the item exists first
-    const { data: _existingItem, error: checkError } = await supabase
+    const { error: checkError } = await supabase
       .from('content_items')
       .select('id')
       .eq('id', id)

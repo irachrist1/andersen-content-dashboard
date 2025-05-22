@@ -8,6 +8,7 @@ interface StatusColumnProps {
 }
 
 export const StatusColumn: React.FC<StatusColumnProps> = ({ 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   status: _status,
   title,
   children 
