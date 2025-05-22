@@ -231,6 +231,39 @@ export const ContentBoard: React.FC = () => {
     }
   };
 
+  // Handle item deletion
+  const handleDeleteItem = async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/content-items/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error response (DELETE):', errorData);
+        throw new Error(errorData.error || `Server responded with ${response.status}`);
+      }
+
+      // Remove the item from the state
+      setContentItems(prev => prev.filter(item => item.id !== id));
+      
+      // Close modal and reset current item
+      setModalOpen(false);
+      setCurrentItem(undefined);
+      
+      toast.success('Content item deleted successfully');
+    } catch (error) {
+      console.error('Error deleting content item:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete content item');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle drag start - optimized
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
@@ -350,7 +383,7 @@ export const ContentBoard: React.FC = () => {
 
   // Render the board
   return (
-    <div className="flex flex-col h-full pt-2">
+    <div className="flex flex-col w-full pt-2 md:pt-3 mb-20">
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -374,16 +407,16 @@ export const ContentBoard: React.FC = () => {
         }}
       />
       
-      {/* Mobile column navigation - fixed to the top */}
-      <div className="md:hidden fixed top-16 left-0 right-0 z-30 bg-gray-50 border-b border-gray-200 py-2 px-4 flex justify-between overflow-x-auto shadow-sm">
-        <a href="#inbox" className="px-3 py-1 text-sm rounded-md whitespace-nowrap bg-white shadow-sm border border-gray-200 text-brand-dark font-medium">Inbox</a>
-        <a href="#pending" className="px-3 py-1 text-sm rounded-md whitespace-nowrap bg-white shadow-sm border border-gray-200 text-brand-dark font-medium">Pending Review</a>
-        <a href="#scheduled" className="px-3 py-1 text-sm rounded-md whitespace-nowrap bg-white shadow-sm border border-gray-200 text-brand-dark font-medium">Scheduled</a>
-        <a href="#done" className="px-3 py-1 text-sm rounded-md whitespace-nowrap bg-white shadow-sm border border-gray-200 text-brand-dark font-medium">Done</a>
+      {/* Mobile column navigation - fixed at the top */}
+      <div className="md:hidden fixed top-16 left-0 right-0 z-30 bg-white border-b border-gray-200 py-3 px-4 flex justify-between overflow-x-auto shadow-sm">
+        <a href="#inbox" className="px-3 py-1.5 text-sm rounded-md whitespace-nowrap bg-gray-50 shadow-sm border border-gray-200 text-brand-dark font-medium">Inbox</a>
+        <a href="#pending" className="px-3 py-1.5 text-sm rounded-md whitespace-nowrap bg-gray-50 shadow-sm border border-gray-200 text-brand-dark font-medium">Pending</a>
+        <a href="#scheduled" className="px-3 py-1.5 text-sm rounded-md whitespace-nowrap bg-gray-50 shadow-sm border border-gray-200 text-brand-dark font-medium">Scheduled</a>
+        <a href="#done" className="px-3 py-1.5 text-sm rounded-md whitespace-nowrap bg-gray-50 shadow-sm border border-gray-200 text-brand-dark font-medium">Done</a>
       </div>
       
       {/* Spacer for mobile to account for fixed navigation */}
-      <div className="md:hidden h-12"></div>
+      <div className="md:hidden h-16"></div>
       
       {isLoading && !contentItems.length ? (
         <div className="flex flex-col justify-center items-center h-[calc(100vh-5rem)] p-4">
@@ -410,7 +443,7 @@ export const ContentBoard: React.FC = () => {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <div className="flex flex-col lg:flex-row overflow-x-auto overflow-y-auto gap-4 p-4 h-full">
+          <div className="flex flex-col lg:flex-row gap-4 p-4 pb-12">
             <StatusColumn 
               title="Inbox" 
               status="Inbox"
@@ -462,6 +495,7 @@ export const ContentBoard: React.FC = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSave={handleSaveItem}
+        onDelete={handleDeleteItem}
         initialData={currentItem}
         mode={modalMode}
       />

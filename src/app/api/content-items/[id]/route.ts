@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { ContentItem } from '@/lib/database.types';
+import { ContentItem, Platform } from '@/lib/database.types';
 
 // Helper to validate content item data
 function validateContentItem(data: Partial<ContentItem>): string[] {
@@ -9,8 +9,16 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   if (!data.title) errors.push('Title is required');
   if (!data.description) errors.push('Description is required');
   
-  if (!data.platform || !['LinkedIn', 'Website'].includes(data.platform)) {
-    errors.push('Platform must be one of: LinkedIn, Website');
+  // Validate platform as an array
+  if (!data.platform || !Array.isArray(data.platform) || data.platform.length === 0) {
+    errors.push('At least one platform must be selected');
+  } else {
+    // Check if all selected platforms are valid
+    const validPlatforms: Platform[] = ['LinkedIn', 'Website'];
+    const invalidPlatforms = data.platform.filter(p => !validPlatforms.includes(p as Platform));
+    if (invalidPlatforms.length > 0) {
+      errors.push(`Invalid platform(s): ${invalidPlatforms.join(', ')}. Valid options are: LinkedIn, Website`);
+    }
   }
   
   if (!data.status || !['Inbox', 'PendingReview', 'Scheduled', 'Done'].includes(data.status)) {

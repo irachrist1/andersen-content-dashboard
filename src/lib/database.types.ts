@@ -1,4 +1,5 @@
 export type Platform = 'LinkedIn' | 'Website';
+export type Platforms = Platform[];
 export type Status = 'Inbox' | 'PendingReview' | 'Scheduled' | 'Done';
 
 export interface ContentItem {
@@ -7,7 +8,7 @@ export interface ContentItem {
   updated_at: string;
   title: string;
   description: string;
-  platform: Platform;
+  platform: Platforms;
   status: Status;
   post_url?: string | null;
   suggested_post_time?: string | null;

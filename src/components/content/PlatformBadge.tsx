@@ -1,8 +1,8 @@
 import React from 'react';
-import { Platform } from '@/lib/database.types';
+import { Platform, Platforms } from '@/lib/database.types';
 
 interface PlatformBadgeProps {
-  platform: Platform;
+  platform: Platforms | Platform; // Can accept either array of platforms or a single platform (for backward compatibility)
 }
 
 // Platform badge colors
@@ -31,11 +31,22 @@ const renderPlatformIcon = (platform: Platform) => {
   }
 };
 
+const SinglePlatformBadge: React.FC<{platform: Platform}> = ({ platform }) => (
+  <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-2xs sm:text-xs font-medium ${platformColors[platform]}`}>
+    {renderPlatformIcon(platform)}
+    {platform}
+  </span>
+);
+
 export const PlatformBadge: React.FC<PlatformBadgeProps> = ({ platform }) => {
+  // Handle both array and single platform formats
+  const platforms = Array.isArray(platform) ? platform : [platform as Platform];
+  
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded text-2xs sm:text-xs font-medium ${platformColors[platform]}`}>
-      {renderPlatformIcon(platform)}
-      {platform}
-    </span>
+    <div className="flex flex-wrap gap-1">
+      {platforms.map(p => (
+        <SinglePlatformBadge key={p} platform={p} />
+      ))}
+    </div>
   );
 }; 

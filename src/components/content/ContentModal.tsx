@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ContentItem, Platform, Status } from '@/lib/database.types';
+import { ContentItem, Platform, Platforms, Status } from '@/lib/database.types';
 
 interface ContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (contentItem: Partial<ContentItem>) => void;
+  onDelete?: (id: string) => void;
   initialData?: Partial<ContentItem>;
   mode: 'add' | 'edit';
 }
@@ -18,18 +19,21 @@ export const ContentModal: React.FC<ContentModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   initialData,
   mode
 }) => {
+  const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
+  
   const getInitialFormData = (): Partial<ContentItem> => ({
     title: '',
     description: '',
-    platform: 'LinkedIn' as Platform, // Default platform
-    status: 'Inbox' as Status,       // Default status
+    platform: ['LinkedIn'] as Platforms, // Default to LinkedIn only
+    status: 'Inbox' as Status,
     post_url: '',
     suggested_post_time: '',
     post_date: '',
-    target_date: '', // Ensure target_date has a default empty string
+    target_date: '',
   });
 
   const [formData, setFormData] = useState<Partial<ContentItem>>(getInitialFormData());
@@ -41,6 +45,10 @@ export const ContentModal: React.FC<ContentModalProps> = ({
         setFormData({
           ...getInitialFormData(), // Start with defaults to ensure all fields are present
           ...initialData,
+          // Convert string platform to array if needed (for backward compatibility)
+          platform: Array.isArray(initialData.platform) 
+            ? initialData.platform 
+            : initialData.platform ? [initialData.platform as Platform] : ['LinkedIn'],
           // Ensure date fields are empty strings if null/undefined for controlled inputs
           post_date: initialData.post_date || '',
           target_date: initialData.target_date || '',
@@ -51,6 +59,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
         setFormData(getInitialFormData());
       }
       setUrlError(null); // Reset URL error when modal opens/re-initializes
+      setConfirmDelete(false); // Reset delete confirmation when modal opens
     }
   }, [isOpen, initialData, mode]);
 
@@ -65,6 +74,22 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     }
     
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle platform checkbox changes
+  const handlePlatformChange = (platform: Platform) => {
+    setFormData(prev => {
+      const currentPlatforms = Array.isArray(prev.platform) ? [...prev.platform] : [];
+      
+      // If platform is already selected, remove it, otherwise add it
+      if (currentPlatforms.includes(platform)) {
+        // Don't allow removing the last platform
+        if (currentPlatforms.length === 1) return prev;
+        return { ...prev, platform: currentPlatforms.filter(p => p !== platform) };
+      } else {
+        return { ...prev, platform: [...currentPlatforms, platform] };
+      }
+    });
   };
 
   const validateUrl = (url: string): boolean => {
@@ -102,6 +127,18 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     }
     
     onSave(formData);
+  };
+
+  // Handle delete with confirmation
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    
+    if (onDelete && formData.id) {
+      onDelete(formData.id);
+    }
   };
 
   if (!isOpen) return null;
@@ -148,23 +185,25 @@ export const ContentModal: React.FC<ContentModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4 mb-5">
             <div>
-              <label htmlFor="platform" className="block text-sm font-medium text-brand-dark mb-1">
-                Platform
+              <label className="block text-sm font-medium text-brand-dark mb-1">
+                Platforms
               </label>
-              <select
-                id="platform"
-                name="platform"
-                value={formData.platform}
-                onChange={handleChange}
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-                required
-              >
+              <div className="space-y-2 mt-1">
                 {PLATFORM_OPTIONS.map(platform => (
-                  <option key={platform} value={platform}>
-                    {platform}
-                  </option>
+                  <div key={platform} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`platform-${platform}`}
+                      checked={Array.isArray(formData.platform) && formData.platform.includes(platform)}
+                      onChange={() => handlePlatformChange(platform)}
+                      className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2"
+                    />
+                    <label htmlFor={`platform-${platform}`} className="ml-2 block text-sm text-gray-700">
+                      {platform}
+                    </label>
+                  </div>
                 ))}
-              </select>
+              </div>
             </div>
 
             <div>
@@ -262,21 +301,38 @@ export const ContentModal: React.FC<ContentModalProps> = ({
             </>
           )}
 
-          <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-colors"
-              disabled={!!urlError}
-            >
-              {mode === 'add' ? 'Create' : 'Save Changes'}
-            </button>
+          <div className="flex justify-between space-x-3 mt-6 pt-4 border-t border-gray-100">
+            {/* Show delete button only in edit mode */}
+            {mode === 'edit' && onDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={`px-4 py-2 ${
+                  confirmDelete 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-red-500 hover:bg-red-600'
+                } text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors`}
+              >
+                {confirmDelete ? 'Confirm Delete' : 'Delete'}
+              </button>
+            )}
+            
+            <div className="flex space-x-3 ml-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-colors"
+                disabled={!!urlError}
+              >
+                {mode === 'add' ? 'Create' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         </form>
       </div>
