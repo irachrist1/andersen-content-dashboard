@@ -118,10 +118,20 @@ export async function GET() {
     ];
 
     // Create table
-    const { error: tableError } = await supabase.rpc('pgsl_sql', { query: createTableSQL }).catch(() => {
-      // Fallback: Try direct query
-      return supabase.from('content_items').select('count(*)').limit(1);
-    });
+    let { error: tableError } = await supabase.rpc('pgsl_sql', { query: createTableSQL });
+
+    if (tableError) {
+      console.warn('RPC call to create table failed, attempting fallback query:', tableError.message);
+      // Fallback: Try direct query to see if table exists or can be queried
+      const { error: fallbackError } = await supabase.from('content_items').select('count(*)').limit(1);
+      // If the fallback also errors, we might use that as the tableError, 
+      // or handle it based on the desired logic. For now, we keep the original rpc error.
+      if (fallbackError) {
+        console.warn('Fallback query also failed:', fallbackError.message);
+        // Optionally, you could decide to assign fallbackError to tableError here if it's more relevant
+        // tableError = fallbackError;
+      }
+    }
 
     // Insert sample data
     const { error: insertError } = await supabase.from('content_items').insert(sampleData);
