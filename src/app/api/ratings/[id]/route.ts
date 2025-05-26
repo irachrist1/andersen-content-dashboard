@@ -7,10 +7,10 @@ import { RatingService } from '@/lib/ratingService';
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    const id = context.params.id;
 
     if (!id) {
       return NextResponse.json({ error: 'Rating ID is required' }, { status: 400 });
