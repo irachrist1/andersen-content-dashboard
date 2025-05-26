@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { ContentItem, Platform } from '@/lib/database.types';
+import { ContentItem, Platform, Department } from '@/lib/database.types';
 
 // Helper to validate content item data
 function validateContentItem(data: Partial<ContentItem>): string[] {
@@ -23,6 +23,14 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   
   if (!data.status || !['Inbox', 'PendingReview', 'Scheduled', 'Done'].includes(data.status)) {
     errors.push('Status must be one of: Inbox, PendingReview, Scheduled, Done');
+  }
+  
+  // Validate department if provided
+  if (data.department) {
+    const validDepartments: Department[] = ['BSS', 'Tax Advisory', 'Management Consulting', 'Operations', 'Technology'];
+    if (!validDepartments.includes(data.department as Department)) {
+      errors.push(`Invalid department: ${data.department}. Valid options are: ${validDepartments.join(', ')}`);
+    }
   }
   
   return errors;
@@ -99,7 +107,9 @@ export async function PUT(
       post_url: contentItem.post_url || null,
       suggested_post_time: contentItem.suggested_post_time || null,
       post_date: contentItem.post_date || null,
-      target_date: contentItem.target_date || null
+      target_date: contentItem.target_date || null,
+      department: contentItem.department || null,
+      sort_order: contentItem.sort_order || null
     };
     
     // Update the content item

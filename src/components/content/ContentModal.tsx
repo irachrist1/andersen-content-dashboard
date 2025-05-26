@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ContentItem, Platform, Platforms, Status } from '@/lib/database.types';
+import { ContentItem, Platform, Platforms, Status, Department } from '@/lib/database.types';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface ContentModalProps {
 
 const PLATFORM_OPTIONS: Platform[] = ['LinkedIn', 'Website'];
 const STATUS_OPTIONS: Status[] = ['Inbox', 'PendingReview', 'Scheduled', 'Done'];
+const DEPARTMENT_OPTIONS: Department[] = ['BSS', 'Tax Advisory', 'Management Consulting', 'Operations', 'Technology'];
 
 export const ContentModal: React.FC<ContentModalProps> = ({
   isOpen,
@@ -34,6 +35,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     suggested_post_time: '',
     post_date: '',
     target_date: '',
+    department: undefined,
   });
 
   const [formData, setFormData] = useState<Partial<ContentItem>>(getInitialFormData());
@@ -54,6 +56,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
           target_date: initialData.target_date || '',
           suggested_post_time: initialData.suggested_post_time || '',
           post_url: initialData.post_url || '',
+          department: initialData.department || undefined,
         });
       } else if (mode === 'add') {
         setFormData(getInitialFormData());
@@ -73,7 +76,12 @@ export const ContentModal: React.FC<ContentModalProps> = ({
       validateUrl(value);
     }
     
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Handle department selection (convert empty string to undefined and cast to Department)
+    if (name === 'department') {
+      setFormData(prev => ({ ...prev, [name]: value === '' ? undefined : value as Department }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle platform checkbox changes
@@ -183,7 +191,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
             <div>
               <label className="block text-sm font-medium text-brand-dark mb-1">
                 Platforms
@@ -225,6 +233,29 @@ export const ContentModal: React.FC<ContentModalProps> = ({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="mb-5">
+            <label htmlFor="department" className="block text-sm font-medium text-brand-dark mb-1">
+              Department
+            </label>
+            <select
+              id="department"
+              name="department"
+              value={formData.department || ''}
+              onChange={handleChange}
+              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+            >
+              <option value="">Select a department (optional)</option>
+              {DEPARTMENT_OPTIONS.map(department => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-brand-medium">
+              Tag this content with a specific business department
+            </p>
           </div>
 
           <div className="mb-5">

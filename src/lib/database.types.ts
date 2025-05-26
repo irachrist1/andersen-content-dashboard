@@ -1,6 +1,7 @@
 export type Platform = 'LinkedIn' | 'Website';
 export type Platforms = Platform[];
 export type Status = 'Inbox' | 'PendingReview' | 'Scheduled' | 'Done';
+export type Department = 'BSS' | 'Tax Advisory' | 'Management Consulting' | 'Operations' | 'Technology';
 
 export interface ContentItem {
   id: string;
@@ -14,6 +15,8 @@ export interface ContentItem {
   suggested_post_time?: string | null;
   post_date?: string | null;
   target_date?: string | null;
+  department?: Department | null;
+  sort_order?: number | null;
 }
 
 export interface Database {

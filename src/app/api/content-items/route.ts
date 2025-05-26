@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { ContentItem, Platform } from '@/lib/database.types';
+import { ContentItem, Platform, Department } from '@/lib/database.types';
 
 // Helper function to validate content item data
 function validateContentItem(data: Partial<ContentItem>): string[] {
@@ -12,7 +12,7 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   // Validate platform as an array
   if (!data.platform || !Array.isArray(data.platform) || data.platform.length === 0) {
     errors.push('At least one platform must be selected');
-  } else {
+  } else { 
     // Check if all selected platforms are valid
     const validPlatforms: Platform[] = ['LinkedIn', 'Website'];
     const invalidPlatforms = data.platform.filter(p => !validPlatforms.includes(p as Platform));
@@ -23,6 +23,14 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   
   if (!data.status || !['Inbox', 'PendingReview', 'Scheduled', 'Done'].includes(data.status)) {
     errors.push('Status must be one of: Inbox, PendingReview, Scheduled, Done');
+  }
+  
+  // Validate department if provided
+  if (data.department) {
+    const validDepartments: Department[] = ['BSS', 'Tax Advisory', 'Management Consulting', 'Operations', 'Technology'];
+    if (!validDepartments.includes(data.department as Department)) {
+      errors.push(`Invalid department: ${data.department}. Valid options are: ${validDepartments.join(', ')}`);
+    }
   }
   
   return errors;
@@ -70,7 +78,9 @@ export async function POST(request: NextRequest) {
       post_url: contentItem.post_url || null,
       suggested_post_time: contentItem.suggested_post_time || null,
       post_date: contentItem.post_date || null,
-      target_date: contentItem.target_date || null
+      target_date: contentItem.target_date || null,
+      department: contentItem.department || null,
+      sort_order: contentItem.sort_order || null
     };
     
     // Insert data

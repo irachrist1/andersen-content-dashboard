@@ -4,7 +4,8 @@ import React, { useState, useEffect, memo, useCallback } from 'react';
 import { StatusColumn } from './StatusColumn';
 import { ContentCard } from '../content/ContentCard';
 import { ContentModal } from '../content/ContentModal';
-import { ContentItem, Status } from '@/lib/database.types';
+import { DepartmentFilter } from './DepartmentFilter';
+import { ContentItem, Status, Department } from '@/lib/database.types';
 import { 
   DndContext, 
   DragEndEvent, 
@@ -16,7 +17,13 @@ import {
   defaultDropAnimationSideEffects,
   MouseSensor,
   TouchSensor,
+  DragOverEvent,
 } from '@dnd-kit/core';
+import { 
+  SortableContext, 
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
 import { toast, Toaster } from 'react-hot-toast';
 
 // Memoized ContentCard for better performance
@@ -31,26 +38,27 @@ export const ContentBoard: React.FC = () => {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [selectedDepartments, setSelectedDepartments] = useState<Department[]>([]);
 
-  // Configure DnD sensors with optimized settings
+  // Configure DnD sensors with optimized settings for responsiveness
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      // Require a more deliberate movement to start dragging
+      // Reduce movement required to start dragging for faster response
       activationConstraint: {
-        distance: 5, // 5px movement required to start drag
+        distance: 3, // Reduced from 5px to 3px for faster activation
       },
     }),
     useSensor(TouchSensor, {
-      // Require press delay to avoid accidental drags on touch devices
+      // Reduce delay for faster touch response
       activationConstraint: {
-        delay: 100, // Short delay for initiating drag on touch
-        tolerance: 5, // Allow 5px movement during delay
+        delay: 50, // Reduced from 100ms to 50ms for faster touch activation
+        tolerance: 3, // Reduced tolerance for more precision
       },
     }),
     useSensor(PointerSensor, {
       // Fallback for devices supporting pointer events
       activationConstraint: {
-        distance: 5,
+        distance: 3, // Reduced from 5px to 3px
       },
     })
   );
@@ -109,23 +117,42 @@ export const ContentBoard: React.FC = () => {
     };
   }, []);
 
-  // Filter content items by status - memoized with useCallback
+  // Filter content items by status and department - memoized with useCallback
   const getItemsByStatus = useCallback((status: Status) => {
-    const filteredItems = contentItems.filter(item => item.status === status);
+    let filteredItems = contentItems.filter(item => item.status === status);
+
+    // Apply department filter
+    if (selectedDepartments.length > 0) {
+      filteredItems = filteredItems.filter(item => 
+        item.department && selectedDepartments.includes(item.department)
+      );
+    }
 
     if (status === 'Done') {
       return filteredItems.sort((a, b) => {
-        if (!a.post_date && !b.post_date) return 0; // both null, keep order
-        if (!a.post_date) return 1; // a is null, b is not, so a is considered older/lesser
-        if (!b.post_date) return -1; // b is null, a is not, so b is considered older/lesser
-        return new Date(b.post_date).getTime() - new Date(a.post_date).getTime(); // Sort by date descending (newest first)
+        // Sort by post_date descending (newest first)
+        if (a.post_date && b.post_date) {
+          const dateA = new Date(a.post_date).getTime();
+          const dateB = new Date(b.post_date).getTime();
+          if (dateA !== dateB) return dateB - dateA;
+        } else if (a.post_date) {
+          return -1; // a has date, b does not, a comes first (newer)
+        } else if (b.post_date) {
+          return 1;  // b has date, a does not, b comes first (newer)
+        }
+        // Fallback to sort_order if dates are the same or both null
+        return (a.sort_order || 0) - (b.sort_order || 0);
       });
     }
 
-    // For other statuses, or if you want a default sort (e.g., by created_at or title)
-    // you can add more conditions here. For now, it returns them as filtered.
-    return filteredItems;
-  }, [contentItems]);
+    // For other statuses, sort by sort_order.
+    return filteredItems.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  }, [contentItems, selectedDepartments]);
+
+  // Handle department filter change
+  const handleDepartmentChange = useCallback((departments: Department[]) => {
+    setSelectedDepartments(departments);
+  }, []);
 
   // Handle edit button click
   const handleEditItem = async (id: string) => {
@@ -207,76 +234,169 @@ export const ContentBoard: React.FC = () => {
 
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('Server error response (PUT):', errorData);
+          console.error('Server error response:', errorData);
           throw new Error(errorData.error || `Server responded with ${response.status}`);
         }
 
         const updatedItem = await response.json();
         console.log('Updated item:', updatedItem);
-        setContentItems(prev => 
-          prev.map(i => (i.id === updatedItem.id ? updatedItem : i))
-        );
+        setContentItems(prev => prev.map(existingItem => 
+          existingItem.id === updatedItem.id ? updatedItem : existingItem
+        ));
         toast.success('Content item updated successfully');
       }
       
-      // Close modal and reset current item
       setModalOpen(false);
       setCurrentItem(undefined);
     } catch (error) {
       console.error('Error saving content item:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
-      toast.error(error instanceof Error ? error.message : 'Failed to save content item');
+      toast.error(modalMode === 'add' ? 'Failed to create content item' : 'Failed to update content item');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle item deletion
+  // Handle delete item
   const handleDeleteItem = async (id: string) => {
     try {
-      setIsLoading(true);
       setError(null);
       
       const response = await fetch(`/api/content-items/${id}`, {
         method: 'DELETE',
       });
-
+      
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Server error response (DELETE):', errorData);
         throw new Error(errorData.error || `Server responded with ${response.status}`);
       }
-
-      // Remove the item from the state
-      setContentItems(prev => prev.filter(item => item.id !== id));
       
-      // Close modal and reset current item
+      setContentItems(prev => prev.filter(item => item.id !== id));
       setModalOpen(false);
       setCurrentItem(undefined);
-      
       toast.success('Content item deleted successfully');
     } catch (error) {
       console.error('Error deleting content item:', error);
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
-      toast.error(error instanceof Error ? error.message : 'Failed to delete content item');
-    } finally {
-      setIsLoading(false);
+      toast.error('Failed to delete content item');
     }
   };
 
-  // Handle drag start - optimized
+  // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    setActiveId(active.id as string);
-    // Add a class to the body to indicate dragging for global styling
+    setActiveId(event.active.id as string);
+    // Add a class to body to disable scroll during drag
     document.body.classList.add('is-dragging');
   }, []);
 
-  // Handle drag end - optimized
+  // Handle reorder within same column
+  const handleReorder = async (items: ContentItem[]) => {
+    // Calculate new sort orders with larger gaps to allow for future insertions
+    const reorderData = items.map((item, index) => ({
+      id: item.id,
+      sort_order: (index + 1) * 1000 // Use larger intervals for sort_order
+    }));
+
+    // Optimistically update the UI immediately
+    setContentItems(prev => {
+      // Create a map for quick lookup of new sort_orders for items in the reordered column
+      const newSortOrders = new Map<string, number>();
+      items.forEach((item, index) => {
+        newSortOrders.set(item.id, (index + 1) * 1000);
+      });
+
+      const updatedGlobalItems = prev.map(globalItem => {
+        if (newSortOrders.has(globalItem.id)) {
+          // This item was part of the reordered column, update its sort_order
+          return { ...globalItem, sort_order: newSortOrders.get(globalItem.id)! };
+        }
+        return globalItem; // Item was not in the reordered column, keep its existing sort_order
+      });
+
+      // Now, sort the entire global list by the (potentially updated) sort_order
+      // This ensures that getItemsByStatus receives a consistently sorted list
+      return updatedGlobalItems.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    });
+
+    // Make API call in background without blocking UI
+    try {
+      const response = await fetch('/api/content-items/reorder', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items: reorderData }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update item order');
+      }
+
+      toast.success('Items reordered', { duration: 1500 });
+    } catch (error) {
+      console.error('Error reordering items:', error);
+      
+      // Revert optimistic update on error
+      setContentItems(prev => {
+        // When reverting, we need to reconstruct the original state of sort_orders
+        // The 'items' parameter here is the reordered list *before* the failed API call,
+        // which contains the items from the specific column that was attempted to be reordered.
+        // The `prev` state is the optimistically updated state.
+        // We need to find the original sort_orders for `items` from a stable source if possible,
+        // or revert to a full fetch if it becomes too complex.
+        // For now, a simple revert based on the `items` list (which holds pre-API call sort orders for *that column*)
+        // and the `reorderData` (which holds the *intended* sort orders) might be insufficient.
+        // A safer revert strategy might be to refetch or use a snapshot taken before optimistic update.
+        // However, the current revert logic tries to find the 'originalItem' from the 'items' list.
+        // 'items' here refers to the argument of handleReorder, which is the locally reordered list for the specific column.
+        // This might not be correct, as `originalItem.sort_order` would be its order *within that column operation*, not globally.
+
+        // Let's simplify the revert: if the API call fails, we should ideally revert to the state *before* this specific handleReorder call.
+        // This is hard without storing a snapshot.
+        // The current revert logic is:
+        // setContentItems(prev => prev.map(item => {
+        //   const originalItem = items.find(i => i.id === item.id); // 'items' is the reordered list for the specific column
+        //   return originalItem ? { ...item, sort_order: originalItem.sort_order } : item;
+        // }));
+        // This tries to restore sort_order for items within the affected column using their order before the reorderData mapping.
+        // This is probably the best we can do without a full snapshot/refetch.
+        // For now, let's keep the existing revert logic structure but acknowledge its potential limitations.
+        const originalSortOrdersSnapshot = new Map<string, number | null>();
+        // We need a snapshot of sort orders *before* the optimistic update for items involved in `reorderData`.
+        // This is tricky. The current `items.find` based rollback might be the most straightforward.
+        // The `items` in `catch` refers to `items` passed to `handleReorder`.
+
+        // To be robust, on error, we should refetch or rollback to a snapshot.
+        // The provided rollback is:
+        // setContentItems(prev => prev.map(item => {
+        // const originalItem = items.find(i => i.id === item.id); // 'items' is the reordered list for specific column
+        // return originalItem ? { ...item, sort_order: originalItem.sort_order } : item;
+        // }));
+        // This existing logic is attempting to use the sort_order from the `items` array passed to `handleReorder`.
+        // This `items` array *is* the representation of the column *after* local drag but *before* new sort_orders were calculated by `reorderData`.
+        // So each `item` in `items` still has its `sort_order` from *before* the current `handleReorder` operation modified it.
+        // This seems to be a reasonable local rollback for the involved items.
+
+        // Let's refine the rollback to be consistent with the optimistic update structure
+        return prev.map(prevItem => {
+          const itemInFailedReorder = items.find(i => i.id === prevItem.id);
+          if (itemInFailedReorder) {
+            // Revert to its sort_order as it was when passed to handleReorder
+            return { ...prevItem, sort_order: itemInFailedReorder.sort_order };
+          }
+          return prevItem;
+        }).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)); // Also re-sort after rollback
+      });
+      
+      toast.error('Failed to save new order. Reverted changes.');
+    }
+  };
+
+  // Handle drag end
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     
-    // Remove dragging class
+    // Remove dragging class from body
     document.body.classList.remove('is-dragging');
     
     if (!over) {
@@ -285,60 +405,98 @@ export const ContentBoard: React.FC = () => {
     }
     
     const activeId = active.id as string;
-    const newStatus = over.id as Status;
+    const overId = over.id as string;
     
-    // Find the item that was dragged
     const draggedItem = contentItems.find(item => item.id === activeId);
+    
     if (!draggedItem) {
       setActiveId(null);
       return;
     }
-    
-    // If the status is the same, do nothing
-    if (draggedItem.status === newStatus) {
-      setActiveId(null);
-      return;
-    }
-    
-    // Optimistically update the UI
-    setContentItems(prev => prev.map(item => 
-      item.id === activeId ? { ...item, status: newStatus } : item
-    ));
-    
-    // Update the status in the backend
-    try {
-      setIsUpdatingStatus(true);
+
+    // Check if this is a status change (inter-column drag)
+    const statusValues: Status[] = ['Inbox', 'PendingReview', 'Scheduled', 'Done'];
+    const isStatusChange = statusValues.includes(overId as Status);
+
+    if (isStatusChange) {
+      // Handle status change (moving between columns)
+      const newStatus = overId as Status;
       
-      const response = await fetch(`/api/content-items/${activeId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...draggedItem,
-          status: newStatus
-        }),
-      });
-      
-      if (!response.ok) {
-        // Revert the optimistic update if the API call fails
-        setContentItems(prev => prev.map(item => 
-          item.id === activeId ? { ...item, status: draggedItem.status } : item
-        ));
-        
-        throw new Error('Failed to update item status');
+      if (draggedItem.status === newStatus) {
+        setActiveId(null);
+        return;
       }
       
-      const updatedItem = await response.json();
-      toast.success(`Moved to ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`);
-    } catch (error) {
-      console.error('Error updating item status:', error);
-      toast.error('Failed to update item status');
-    } finally {
+      // Optimistically update the UI before making API call
+      setContentItems(prev => prev.map(item => 
+        item.id === activeId ? { ...item, status: newStatus } : item
+      ));
+      
+      // Update the status in the backend
+      try {
+        setIsUpdatingStatus(true);
+        
+        const response = await fetch(`/api/content-items/${activeId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...draggedItem,
+            status: newStatus
+          }),
+        });
+        
+        if (!response.ok) {
+          // Revert the optimistic update if the API call fails
+          setContentItems(prev => prev.map(item => 
+            item.id === activeId ? { ...item, status: draggedItem.status } : item
+          ));
+          
+          throw new Error('Failed to update item status');
+        }
+        
+        const updatedItem = await response.json();
+        toast.success(`Moved to ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`);
+      } catch (error) {
+        console.error('Error updating item status:', error);
+        toast.error('Failed to update item status');
+      } finally {
+        setActiveId(null);
+        setIsUpdatingStatus(false);
+      }
+    } else {
+      // Handle reordering within the same column (intra-column drag)
+      const overItem = contentItems.find(item => item.id === overId);
+      
+      if (!overItem || draggedItem.id === overItem.id) {
+        setActiveId(null);
+        return;
+      }
+      
+      // Only reorder if both items are in the same status column
+      if (draggedItem.status === overItem.status) {
+        const statusItems = getItemsByStatus(draggedItem.status);
+        const reorderedItems = [...statusItems];
+        
+        // Find indices within the status column
+        const oldIndex = reorderedItems.findIndex(item => item.id === draggedItem.id);
+        const newIndex = reorderedItems.findIndex(item => item.id === overItem.id);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+          // Remove item from old position
+          reorderedItems.splice(oldIndex, 1);
+          // Insert at new position
+          reorderedItems.splice(newIndex, 0, draggedItem);
+          
+          // Update the order
+          handleReorder(reorderedItems);
+        }
+      }
+      
       setActiveId(null);
-      setIsUpdatingStatus(false);
     }
-  }, [contentItems]);
+  }, [contentItems, getItemsByStatus]);
 
   // Handle drag cancel
   const handleDragCancel = useCallback(() => {
@@ -437,58 +595,68 @@ export const ContentBoard: React.FC = () => {
           </div>
         </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-        >
-          <div className="flex flex-col lg:flex-row gap-4 p-4 pb-12">
-            <StatusColumn 
-              title="Inbox" 
-              status="Inbox"
-              items={getItemsByStatus('Inbox')}
-              onEdit={handleEditItem}
-              activeId={activeId}
-              id="inbox"
-            />
-            <StatusColumn 
-              title="Pending Review" 
-              status="PendingReview"
-              items={getItemsByStatus('PendingReview')}
-              onEdit={handleEditItem}
-              activeId={activeId}
-              id="pending"
-            />
-            <StatusColumn 
-              title="Scheduled" 
-              status="Scheduled"
-              items={getItemsByStatus('Scheduled')}
-              onEdit={handleEditItem}
-              activeId={activeId}
-              id="scheduled"
-            />
-            <StatusColumn 
-              title="Done" 
-              status="Done"
-              items={getItemsByStatus('Done')}
-              onEdit={handleEditItem}
-              activeId={activeId}
-              id="done"
+        <>
+          {/* Department Filter */}
+          <div className="px-4">
+            <DepartmentFilter
+              selectedDepartments={selectedDepartments}
+              onDepartmentChange={handleDepartmentChange}
             />
           </div>
 
-          <DragOverlay dropAnimation={dropAnimationConfig}>
-            {activeId ? (
-              <ContentCard 
-                item={contentItems.find(item => item.id === activeId) as ContentItem} 
-                onEdit={() => {}}
-                draggable={false}
-                isDragging={true}
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div className="flex flex-col lg:flex-row gap-4 p-4 pb-12">
+              <StatusColumn 
+                title="Inbox" 
+                status="Inbox"
+                items={getItemsByStatus('Inbox')}
+                onEdit={handleEditItem}
+                activeId={activeId}
+                id="inbox"
               />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+              <StatusColumn 
+                title="Pending Review" 
+                status="PendingReview"
+                items={getItemsByStatus('PendingReview')}
+                onEdit={handleEditItem}
+                activeId={activeId}
+                id="pending"
+              />
+              <StatusColumn 
+                title="Scheduled" 
+                status="Scheduled"
+                items={getItemsByStatus('Scheduled')}
+                onEdit={handleEditItem}
+                activeId={activeId}
+                id="scheduled"
+              />
+              <StatusColumn 
+                title="Done" 
+                status="Done"
+                items={getItemsByStatus('Done')}
+                onEdit={handleEditItem}
+                activeId={activeId}
+                id="done"
+              />
+            </div>
+
+            <DragOverlay dropAnimation={dropAnimationConfig}>
+              {activeId ? (
+                <ContentCard 
+                  item={contentItems.find(item => item.id === activeId) as ContentItem} 
+                  onEdit={() => {}}
+                  draggable={false}
+                  isDragging={true}
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </>
       )}
 
       <ContentModal

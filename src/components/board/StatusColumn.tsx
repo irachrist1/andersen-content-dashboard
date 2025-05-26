@@ -1,7 +1,8 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ContentItem, Status } from '@/lib/database.types';
-import { ContentCard } from '../content/ContentCard';
+import { SortableContentCard } from './SortableContentCard';
 import { EmptyState } from './EmptyState';
 
 interface StatusColumnProps {
@@ -17,6 +18,21 @@ export const StatusColumn: React.FC<StatusColumnProps> = ({ title, status, items
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
+
+  // Sort items by sort_order, with fallback to created_at
+  const sortedItems = [...items].sort((a, b) => {
+    // If both have sort_order, use that
+    if (a.sort_order !== null && b.sort_order !== null) {
+      return (a.sort_order as number) - (b.sort_order as number);
+    }
+    // If only one has sort_order, prioritize it
+    if (a.sort_order !== null) return -1;
+    if (b.sort_order !== null) return 1;
+    // Fallback to created_at
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+
+  const itemIds = sortedItems.map(item => item.id);
 
   return (
     <div 
@@ -49,22 +65,22 @@ export const StatusColumn: React.FC<StatusColumnProps> = ({ title, status, items
       </div>
 
       <div ref={setNodeRef} className="space-y-3">
-        {items.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <EmptyState 
             message="No content items" 
             subMessage="Drag items here or add new content" 
           />
         ) : (
-          <>
-            {items.map((item) => (
-              <ContentCard 
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {sortedItems.map((item) => (
+              <SortableContentCard 
                 key={item.id} 
                 item={item} 
                 onEdit={onEdit} 
                 isDragging={activeId === item.id}
               />
             ))}
-          </>
+          </SortableContext>
         )}
       </div>
     </div>

@@ -2,6 +2,21 @@
 
 This document outlines potential future enhancements for the ContentFlow application tailored for Andersen in Rwanda. These enhancements would further improve the content management workflow, user experience, and deliver additional business value.
 
+## Recently Moved to Active Development (Q1 2025)
+
+The following features have been moved from future enhancements to active development phases:
+
+- **Department Tagging System** → Phase 13 (Implementation Roadmap)
+- **Enhanced Kanban Sorting** → Phase 14 (Implementation Roadmap)  
+- **Rating and Publication System** → Phase 15 (Implementation Roadmap)
+- **AI-Powered Content Assistant** → Phase 16 (Implementation Roadmap)
+
+*See `docs/IMPLEMENTATION_ROADMAP.md` for detailed implementation plans.*
+
+---
+
+## Remaining Future Enhancement Backlog
+
 ## 1. Team Assignment & Collaboration
 
 **Description:** Enable multiple team members to collaborate on content items with assignee tracking, mentions, and commenting.
@@ -18,6 +33,8 @@ This document outlines potential future enhancements for the ContentFlow applica
 - Improved team communication within the tool
 - Reduced need for separate communication channels
 - Better visibility into workload distribution
+
+**Prerequisites:** User authentication system, role-based permissions
 
 ## 2. Content Calendar View
 
@@ -36,6 +53,8 @@ This document outlines potential future enhancements for the ContentFlow applica
 - Easier identification of gaps in the content schedule
 - More strategic content planning
 
+**Prerequisites:** Enhanced date management, recurring event support
+
 ## 3. Content Analytics Dashboard
 
 **Description:** A dashboard providing insights into content performance, publishing frequency, and workflow efficiency.
@@ -52,6 +71,8 @@ This document outlines potential future enhancements for the ContentFlow applica
 - Identification of workflow bottlenecks
 - Performance tracking against content goals
 - Justification for resource allocation
+
+**Prerequisites:** Historical data collection, analytics service integration
 
 ## 4. Automated Content Distribution
 
@@ -70,6 +91,8 @@ This document outlines potential future enhancements for the ContentFlow applica
 - Time savings through automation
 - Reduced risk of missed publishing windows
 
+**Prerequisites:** Platform API integrations, OAuth authentication, compliance review
+
 ## 5. Content Templates System
 
 **Description:** A library of reusable content templates for common post types specific to Andersen in Rwanda.
@@ -87,19 +110,28 @@ This document outlines potential future enhancements for the ContentFlow applica
 - Easier onboarding for new team members
 - Reduced effort for routine content types
 
-## Implementation Considerations
+**Prerequisites:** Media management system, template engine, brand guidelines integration
 
-- **Priority Order:** Based on business value and implementation complexity, we recommend implementing these features in the following order:
-  1. Team Assignment & Collaboration
-  2. Content Calendar View
-  3. Content Templates System
+## Updated Implementation Considerations
+
+- **Revised Priority Order:** Based on business value and implementation complexity, the recommended implementation order for remaining features is:
+  1. Content Templates System (builds on AI assistant from Phase 16)
+  2. Team Assignment & Collaboration 
+  3. Content Calendar View
   4. Content Analytics Dashboard
   5. Automated Content Distribution
 
 - **Technical Approach:**
-  - Extend the existing ContentItem data model to accommodate new fields
-  - Develop new UI components while maintaining the current clean aesthetic
-  - Consider API integrations with social platforms via their official APIs
+  - Leverage the enhanced data model from Phases 13-16
+  - Build upon the department tagging and rating systems
+  - Utilize AI capabilities for template generation and content optimization
   - Implement proper user authentication and authorization for team features
+  - Consider API integrations with social platforms via their official APIs
 
-These proposed enhancements align with the core purpose of ContentFlow while extending its capabilities to better serve Andersen in Rwanda's specific content workflow needs. 
+## Integration with Current Roadmap
+
+These future enhancements are designed to complement and build upon the features currently in active development (Phases 13-16). The AI assistant and rating system will provide a strong foundation for content templates and analytics, while the department tagging system will enhance collaboration and calendar features.
+
+**Next Review:** After completion of Phase 16 (Q2 2025)
+
+These proposed enhancements continue to align with the core purpose of ContentFlow while extending its capabilities to better serve Andersen in Rwanda's evolving content workflow needs. 

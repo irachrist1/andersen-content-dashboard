@@ -5,6 +5,7 @@ import { ContentItem } from '@/lib/database.types';
 import { useDraggable } from '@dnd-kit/core';
 import { PreviewModal } from './PreviewModal';
 import { PlatformBadge } from './PlatformBadge';
+import { DepartmentBadge } from './DepartmentBadge';
 
 interface ContentCardProps {
   item: ContentItem;
@@ -75,7 +76,12 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         <p className="text-xs sm:text-sm text-brand-medium mb-4 line-clamp-3">{item.description}</p>
         
         <div className="flex flex-wrap justify-between items-center gap-2">
-          <PlatformBadge platform={item.platform} />
+          <div className="flex flex-wrap items-center gap-2">
+            <PlatformBadge platform={item.platform} />
+            {item.department && (
+              <DepartmentBadge department={item.department} variant="compact" />
+            )}
+          </div>
           
           {item.status === 'Done' && (
             <div className="flex items-center text-xs text-brand-medium">
