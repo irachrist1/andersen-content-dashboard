@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RatingService } from '@/lib/ratingService';
 
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
 /**
  * DELETE /api/ratings/[id]
  * Delete a rating
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = params.id;

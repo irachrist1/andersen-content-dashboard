@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { ContentItem, Platform, Platforms, Status, Department } from '@/lib/database.types';
 import { RatingDisplay } from '../rating/RatingDisplay';
+import { AIAssistantModal } from '../ai/AIAssistantModal';
+import { AIUsageAnalytics } from '../ai/AIUsageAnalytics';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -29,6 +31,8 @@ export const ContentModal: React.FC<ContentModalProps> = ({
 }) => {
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'details' | 'ratings'>('details');
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState<boolean>(false);
+  const [isAIAnalyticsOpen, setIsAIAnalyticsOpen] = useState<boolean>(false);
   
   const getInitialFormData = (): Partial<ContentItem> => ({
     title: '',
@@ -141,6 +145,13 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     
     onSave(formData);
   };
+  
+  const handleAIContentGenerated = (updatedContent: Partial<ContentItem>) => {
+    setFormData({
+      ...formData,
+      ...updatedContent
+    });
+  };
 
   // Handle delete with confirmation
   const handleDelete = () => {
@@ -154,125 +165,169 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     }
   };
 
+  // Only render the main modal when it's open
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-semibold text-brand-dark">
-            {mode === 'add' ? 'Add New Content' : 'Edit Content'}
-          </h2>
-        </div>
-
-        {/* Tabs - Only show in edit mode and when we have an ID */}
-        {mode === 'edit' && formData.id && (
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
+    <>
+      {isAIAssistantOpen && (
+        <AIAssistantModal 
+          isOpen={isAIAssistantOpen}
+          onClose={() => setIsAIAssistantOpen(false)}
+          initialContent={formData}
+          onContentGenerated={handleAIContentGenerated}
+        />
+      )}
+      
+      {isAIAnalyticsOpen && (
+        <AIUsageAnalytics
+          isOpen={isAIAnalyticsOpen}
+          onClose={() => setIsAIAnalyticsOpen(false)}
+        />
+      )}
+      
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-brand-dark">
+              {mode === 'add' ? 'Add New Content' : 'Edit Content'}
+            </h2>
+            
+            <div className="flex space-x-3">
               <button
-                onClick={() => setActiveTab('details')}
-                className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === 'details'
-                    ? 'border-b-2 border-brand-red text-brand-red'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                onClick={() => setIsAIAssistantOpen(true)}
+                className="px-3 py-1 bg-brand-primary text-white rounded-md hover:bg-brand-secondary transition-colors flex items-center text-sm"
+                title="AI Assistant"
               >
-                Details
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1">
+                  <path d="M16.5 7.5h-9v9h9v-9z" />
+                  <path fillRule="evenodd" d="M8.25 2.25A.75.75 0 019 3v.75h2.25V3a.75.75 0 011.5 0v.75H15V3a.75.75 0 011.5 0v.75h.75a3 3 0 013 3v.75H21A.75.75 0 0121 9h-.75v2.25H21a.75.75 0 010 1.5h-.75V15H21a.75.75 0 010 1.5h-.75v.75a3 3 0 01-3 3h-.75V21a.75.75 0 01-1.5 0v-.75h-2.25V21a.75.75 0 01-1.5 0v-.75H9V21a.75.75 0 01-1.5 0v-.75h-.75a3 3 0 01-3-3v-.75H3a.75.75 0 010-1.5h.75v-2.25H3a.75.75 0 010-1.5h.75V9H3a.75.75 0 010-1.5h.75v-.75a3 3 0 013-3h.75V3a.75.75 0 01.75-.75zM6 6.75A.75.75 0 016.75 6h10.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V6.75z" clipRule="evenodd" />
+                </svg>
+                AI Assistant
               </button>
+              
               <button
-                onClick={() => setActiveTab('ratings')}
-                className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === 'ratings'
-                    ? 'border-b-2 border-brand-red text-brand-red'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                onClick={() => setIsAIAnalyticsOpen(true)}
+                className="px-3 py-1 bg-brand-primary text-white rounded-md hover:bg-brand-secondary transition-colors flex items-center text-sm"
+                title="AI Usage Analytics"
               >
-                Ratings
-                {formData.total_ratings ? (
-                  <span className="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">
-                    {formData.total_ratings}
-                  </span>
-                ) : null}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1">
+                  <path fillRule="evenodd" d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5a.75.75 0 01-.75-.75V3z" clipRule="evenodd" />
+                </svg>
+                Analytics
               </button>
-            </nav>
-          </div>
-        )}
-
-        {activeTab === 'details' ? (
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="mb-5">
-            <label htmlFor="title" className="block text-sm font-medium text-brand-dark mb-1">
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-              required
-            />
-          </div>
-
-          <div className="mb-5">
-            <label htmlFor="description" className="block text-sm font-medium text-brand-dark mb-1">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-              required
-            ></textarea>
-          </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-            <div>
-              <label className="block text-sm font-medium text-brand-dark mb-1">
-                Platforms
-              </label>
-              <div className="space-y-2 mt-1">
-                {PLATFORM_OPTIONS.map(platform => (
-                  <div key={platform} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`platform-${platform}`}
-                      checked={Array.isArray(formData.platform) && formData.platform.includes(platform)}
-                      onChange={() => handlePlatformChange(platform)}
-                      className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2"
-                    />
-                    <label htmlFor={`platform-${platform}`} className="ml-2 block text-sm text-gray-700">
-                      {platform}
-                    </label>
-                  </div>
-                ))}
-              </div>
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-brand-dark mb-1">
-                Status
+          {/* Tabs - Only show in edit mode and when we have an ID */}
+          {mode === 'edit' && formData.id && (
+            <div className="border-b border-gray-200">
+              <nav className="flex -mb-px">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`px-6 py-3 text-sm font-medium ${
+                    activeTab === 'details'
+                      ? 'border-b-2 border-brand-primary text-brand-primary'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Details
+                </button>
+                <button
+                  onClick={() => setActiveTab('ratings')}
+                  className={`px-6 py-3 text-sm font-medium ${
+                    activeTab === 'ratings'
+                      ? 'border-b-2 border-brand-primary text-brand-primary'
+                      : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Ratings
+                  {formData.total_ratings ? (
+                    <span className="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                      {formData.total_ratings}
+                    </span>
+                  ) : null}
+                </button>
+              </nav>
+            </div>
+          )}
+
+          {activeTab === 'details' ? (
+          <form onSubmit={handleSubmit} className="p-6">
+            <div className="mb-5">
+              <label htmlFor="title" className="block text-sm font-medium text-brand-dark mb-1">
+                Title
               </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
                 required
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <option key={status} value={status}>
-                    {status.replace(/([A-Z])/g, ' $1').trim()}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
-          </div>
+
+            <div className="mb-5">
+              <label htmlFor="description" className="block text-sm font-medium text-brand-dark mb-1">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+                required
+              ></textarea>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <div>
+                <label className="block text-sm font-medium text-brand-dark mb-1">
+                  Platforms
+                </label>
+                <div className="space-y-2 mt-1">
+                  {PLATFORM_OPTIONS.map(platform => (
+                    <div key={platform} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`platform-${platform}`}
+                        checked={Array.isArray(formData.platform) && formData.platform.includes(platform)}
+                        onChange={() => handlePlatformChange(platform)}
+                        className="w-4 h-4 text-brand-primary border-gray-300 rounded focus:ring-brand-primary focus:ring-2"
+                      />
+                      <label htmlFor={`platform-${platform}`} className="ml-2 block text-sm text-gray-700">
+                        {platform}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium text-brand-dark mb-1">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+                  required
+                >
+                  {STATUS_OPTIONS.map(status => (
+                    <option key={status} value={status}>
+                      {status.replace(/([A-Z])/g, ' $1').trim()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className="mb-5">
               <label htmlFor="department" className="block text-sm font-medium text-brand-dark mb-1">
@@ -297,131 +352,132 @@ export const ContentModal: React.FC<ContentModalProps> = ({
               </p>
             </div>
 
-          <div className="mb-5">
-            <label htmlFor="target_date" className="block text-sm font-medium text-brand-dark mb-1">
-              Target Date
-            </label>
-            <input
-              type="date"
-              id="target_date"
-              name="target_date"
-              value={formData.target_date || ''}
-              onChange={handleChange}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-            />
-            <p className="mt-1 text-xs text-brand-medium">
-              Set a target planning or publication date
-            </p>
-          </div>
+            <div className="mb-5">
+              <label htmlFor="target_date" className="block text-sm font-medium text-brand-dark mb-1">
+                Target Date
+              </label>
+              <input
+                type="date"
+                id="target_date"
+                name="target_date"
+                value={formData.target_date || ''}
+                onChange={handleChange}
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+              />
+              <p className="mt-1 text-xs text-brand-medium">
+                Set a target planning or publication date
+              </p>
+            </div>
 
-          {formData.status === 'Done' && (
-            <>
-              <div className="mb-5">
-                <label htmlFor="post_date" className="block text-sm font-medium text-brand-dark mb-1">
-                  Post Date
-                </label>
-                <input
-                  type="date"
-                  id="post_date"
-                  name="post_date"
-                  value={formData.post_date || ''}
-                  onChange={handleChange}
-                  className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-                />
-                <p className="mt-1 text-xs text-brand-medium">
-                  The date when this content was posted
-                </p>
-              </div>
-              
-              <div className="mb-5">
-                <label htmlFor="post_url" className="block text-sm font-medium text-brand-dark mb-1">
-                  Post URL
-                </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+            {formData.status === 'Done' && (
+              <>
+                <div className="mb-5">
+                  <label htmlFor="post_date" className="block text-sm font-medium text-brand-dark mb-1">
+                    Post Date
+                  </label>
                   <input
-                    type="url"
-                    id="post_url"
-                    name="post_url"
-                    value={formData.post_url || ''}
+                    type="date"
+                    id="post_date"
+                    name="post_date"
+                    value={formData.post_date || ''}
                     onChange={handleChange}
-                    className={`w-full p-2.5 border ${urlError ? 'border-red-500 pr-10' : 'border-gray-300'} rounded-md focus:ring-brand-primary focus:border-brand-primary`}
-                    placeholder="https://example.com/post"
+                    className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
                   />
-                  {urlError ? (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  ) : formData.post_url ? (
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  ) : null}
+                  <p className="mt-1 text-xs text-brand-medium">
+                    The date when this content was posted
+                  </p>
                 </div>
-                {urlError && (
-                  <p className="mt-1 text-sm text-red-600">{urlError}</p>
-                )}
-                <p className="mt-1 text-xs text-brand-medium">
-                  Add the full URL where this content is published
-                </p>
-              </div>
-            </>
-          )}
+                
+                <div className="mb-5">
+                  <label htmlFor="post_url" className="block text-sm font-medium text-brand-dark mb-1">
+                    Post URL
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <input
+                      type="url"
+                      id="post_url"
+                      name="post_url"
+                      value={formData.post_url || ''}
+                      onChange={handleChange}
+                      className={`w-full p-2.5 border ${urlError ? 'border-red-500 pr-10' : 'border-gray-300'} rounded-md focus:ring-brand-primary focus:border-brand-primary`}
+                      placeholder="https://example.com/post"
+                    />
+                    {urlError ? (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    ) : formData.post_url ? (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    ) : null}
+                  </div>
+                  {urlError && (
+                    <p className="mt-1 text-sm text-red-600">{urlError}</p>
+                  )}
+                  <p className="mt-1 text-xs text-brand-medium">
+                    Add the full URL where this content is published
+                  </p>
+                </div>
+              </>
+            )}
 
-          <div className="flex justify-between space-x-3 mt-6 pt-4 border-t border-gray-100">
-            {/* Show delete button only in edit mode */}
-            {mode === 'edit' && onDelete && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className={`px-4 py-2 ${
-                  confirmDelete 
-                    ? 'bg-red-600 hover:bg-red-700' 
-                    : 'bg-red-500 hover:bg-red-600'
-                } text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors`}
-              >
-                {confirmDelete ? 'Confirm Delete' : 'Delete'}
-              </button>
-            )}
-            
-            <div className="flex space-x-3 ml-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-colors"
-                disabled={!!urlError}
-              >
-                {mode === 'add' ? 'Create' : 'Save Changes'}
-              </button>
+            <div className="flex justify-between space-x-3 mt-6 pt-4 border-t border-gray-100">
+              {/* Show delete button only in edit mode */}
+              {mode === 'edit' && onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={`px-4 py-2 ${
+                    confirmDelete 
+                      ? 'bg-red-600 hover:bg-red-700' 
+                      : 'bg-red-500 hover:bg-red-600'
+                  } text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors`}
+                >
+                  {confirmDelete ? 'Confirm Delete' : 'Delete'}
+                </button>
+              )}
+              
+              <div className="flex space-x-3 ml-auto">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary transition-colors"
+                  disabled={!!urlError}
+                >
+                  {mode === 'add' ? 'Create' : 'Save Changes'}
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
-        ) : (
-          <div className="p-6">
-            {formData.id && (
-              <RatingDisplay contentItem={formData as ContentItem} userId={userId} />
-            )}
-            <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-              >
-                Close
-              </button>
+          </form>
+          ) : (
+            <div className="p-6">
+              {formData.id && (
+                <RatingDisplay contentItem={formData as ContentItem} userId={userId} />
+              )}
+              <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }; 

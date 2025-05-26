@@ -73,7 +73,7 @@ export const PublicationQueue: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900">Publication Queue</h2>
         <button
           onClick={fetchQueue}
-          className="text-sm text-brand-red hover:text-brand-red/80 flex items-center"
+          className="text-sm text-brand-primary hover:text-brand-primary/80 flex items-center"
           disabled={loading}
         >
           <svg 
@@ -103,7 +103,7 @@ export const PublicationQueue: React.FC = () => {
       {/* Queue items */}
       {loading ? (
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-red mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-primary mx-auto"></div>
           <p className="mt-2 text-sm text-gray-500">Loading publication queue...</p>
         </div>
       ) : queueItems.length === 0 ? (
@@ -161,7 +161,7 @@ export const PublicationQueue: React.FC = () => {
                       className={`px-4 py-2 text-sm font-medium rounded-md ${
                         processing === item.id
                           ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-brand-red text-white hover:bg-brand-red/90'
+                          : 'bg-brand-primary text-white hover:bg-brand-secondary'
                       }`}
                     >
                       {processing === item.id ? (

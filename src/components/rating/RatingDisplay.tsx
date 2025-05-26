@@ -172,7 +172,7 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({ contentItem, userI
             <textarea
               id="comment"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-red focus:border-brand-red sm:text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary sm:text-sm"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Add a comment about your rating..."
@@ -186,7 +186,7 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({ contentItem, userI
               disabled={submitting || !userRating?.rating}
               className={`px-4 py-2 text-sm font-medium rounded-md ${
                 userRating?.rating 
-                  ? 'bg-brand-red text-white hover:bg-brand-red/90' 
+                  ? 'bg-brand-primary text-white hover:bg-brand-secondary' 
                   : 'bg-gray-200 text-gray-500 cursor-not-allowed'
               }`}
             >
@@ -213,7 +213,7 @@ export const RatingDisplay: React.FC<RatingDisplayProps> = ({ contentItem, userI
         
         {loading ? (
           <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-brand-red mx-auto"></div>
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-brand-primary mx-auto"></div>
             <p className="mt-2 text-sm text-gray-500">Loading ratings...</p>
           </div>
         ) : ratings.length === 0 ? (

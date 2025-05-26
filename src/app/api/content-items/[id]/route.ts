@@ -45,10 +45,9 @@ function isValidUUID(uuid: string): boolean {
 // GET /api/content-items/[id] - Retrieve a specific content item
 export async function GET(
   request: NextRequest,
-  { params: paramsPromise }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const params = await paramsPromise;
     const id = params.id;
     
     // Validate UUID format
@@ -98,10 +97,9 @@ export async function GET(
 // PUT /api/content-items/[id] - Update a specific content item
 export async function PUT(
   request: NextRequest,
-  { params: paramsPromise }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const params = await paramsPromise;
     const id = params.id;
     const contentItem = await request.json();
     
@@ -156,10 +154,9 @@ export async function PUT(
 // DELETE /api/content-items/[id] - Delete a specific content item
 export async function DELETE(
   request: NextRequest,
-  { params: paramsPromise }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const params = await paramsPromise;
     const id = params.id;
     
     // Validate UUID format
