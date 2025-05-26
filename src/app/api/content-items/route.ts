@@ -40,10 +40,28 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_request: NextRequest) {
   try {
-    // Select all fields including rating fields
+    // Explicitly select all fields including rating fields
     const { data, error } = await supabase
       .from('content_items')
-      .select('*')
+      .select(`
+        *,
+        id,
+        title,
+        description,
+        platform,
+        status,
+        post_url,
+        suggested_post_time,
+        post_date,
+        target_date,
+        department,
+        sort_order,
+        average_rating,
+        total_ratings,
+        publication_eligible,
+        created_at,
+        updated_at
+      `)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
     
