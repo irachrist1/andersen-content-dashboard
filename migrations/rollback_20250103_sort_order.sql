@@ -3,6 +3,6 @@
 
 -- Drop the index
 DROP INDEX IF EXISTS idx_content_items_sort_order;
-
+ 
 -- Remove the sort_order column
 ALTER TABLE content_items DROP COLUMN IF EXISTS sort_order; 

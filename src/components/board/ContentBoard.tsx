@@ -265,12 +265,12 @@ export const ContentBoard: React.FC = () => {
       const response = await fetch(`/api/content-items/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Server responded with ${response.status}`);
       }
-      
+
       setContentItems(prev => prev.filter(item => item.id !== id));
       setModalOpen(false);
       setCurrentItem(undefined);
@@ -413,7 +413,7 @@ export const ContentBoard: React.FC = () => {
       setActiveId(null);
       return;
     }
-
+    
     // Check if this is a status change (inter-column drag)
     const statusValues: Status[] = ['Inbox', 'PendingReview', 'Scheduled', 'Done'];
     const isStatusChange = statusValues.includes(overId as Status);
@@ -422,49 +422,49 @@ export const ContentBoard: React.FC = () => {
       // Handle status change (moving between columns)
       const newStatus = overId as Status;
       
-      if (draggedItem.status === newStatus) {
-        setActiveId(null);
-        return;
-      }
-      
+    if (draggedItem.status === newStatus) {
+      setActiveId(null);
+      return;
+    }
+    
       // Optimistically update the UI before making API call
-      setContentItems(prev => prev.map(item => 
-        item.id === activeId ? { ...item, status: newStatus } : item
-      ));
+    setContentItems(prev => prev.map(item => 
+      item.id === activeId ? { ...item, status: newStatus } : item
+    ));
+    
+    // Update the status in the backend
+    try {
+      setIsUpdatingStatus(true);
       
-      // Update the status in the backend
-      try {
-        setIsUpdatingStatus(true);
+      const response = await fetch(`/api/content-items/${activeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...draggedItem,
+          status: newStatus
+        }),
+      });
+      
+      if (!response.ok) {
+        // Revert the optimistic update if the API call fails
+        setContentItems(prev => prev.map(item => 
+          item.id === activeId ? { ...item, status: draggedItem.status } : item
+        ));
         
-        const response = await fetch(`/api/content-items/${activeId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...draggedItem,
-            status: newStatus
-          }),
-        });
-        
-        if (!response.ok) {
-          // Revert the optimistic update if the API call fails
-          setContentItems(prev => prev.map(item => 
-            item.id === activeId ? { ...item, status: draggedItem.status } : item
-          ));
-          
-          throw new Error('Failed to update item status');
-        }
-        
-        const updatedItem = await response.json();
-        toast.success(`Moved to ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`);
-      } catch (error) {
-        console.error('Error updating item status:', error);
-        toast.error('Failed to update item status');
-      } finally {
-        setActiveId(null);
-        setIsUpdatingStatus(false);
+        throw new Error('Failed to update item status');
       }
+      
+      const updatedItem = await response.json();
+      toast.success(`Moved to ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`);
+    } catch (error) {
+      console.error('Error updating item status:', error);
+      toast.error('Failed to update item status');
+    } finally {
+      setActiveId(null);
+      setIsUpdatingStatus(false);
+    }
     } else {
       // Handle reordering within the same column (intra-column drag)
       const overItem = contentItems.find(item => item.id === overId);
@@ -604,58 +604,58 @@ export const ContentBoard: React.FC = () => {
             />
           </div>
 
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <div className="flex flex-col lg:flex-row gap-4 p-4 pb-12">
-              <StatusColumn 
-                title="Inbox" 
-                status="Inbox"
-                items={getItemsByStatus('Inbox')}
-                onEdit={handleEditItem}
-                activeId={activeId}
-                id="inbox"
-              />
-              <StatusColumn 
-                title="Pending Review" 
-                status="PendingReview"
-                items={getItemsByStatus('PendingReview')}
-                onEdit={handleEditItem}
-                activeId={activeId}
-                id="pending"
-              />
-              <StatusColumn 
-                title="Scheduled" 
-                status="Scheduled"
-                items={getItemsByStatus('Scheduled')}
-                onEdit={handleEditItem}
-                activeId={activeId}
-                id="scheduled"
-              />
-              <StatusColumn 
-                title="Done" 
-                status="Done"
-                items={getItemsByStatus('Done')}
-                onEdit={handleEditItem}
-                activeId={activeId}
-                id="done"
-              />
-            </div>
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <div className="flex flex-col lg:flex-row gap-4 p-4 pb-12">
+            <StatusColumn 
+              title="Inbox" 
+              status="Inbox"
+              items={getItemsByStatus('Inbox')}
+              onEdit={handleEditItem}
+              activeId={activeId}
+              id="inbox"
+            />
+            <StatusColumn 
+              title="Pending Review" 
+              status="PendingReview"
+              items={getItemsByStatus('PendingReview')}
+              onEdit={handleEditItem}
+              activeId={activeId}
+              id="pending"
+            />
+            <StatusColumn 
+              title="Scheduled" 
+              status="Scheduled"
+              items={getItemsByStatus('Scheduled')}
+              onEdit={handleEditItem}
+              activeId={activeId}
+              id="scheduled"
+            />
+            <StatusColumn 
+              title="Done" 
+              status="Done"
+              items={getItemsByStatus('Done')}
+              onEdit={handleEditItem}
+              activeId={activeId}
+              id="done"
+            />
+          </div>
 
-            <DragOverlay dropAnimation={dropAnimationConfig}>
-              {activeId ? (
-                <ContentCard 
-                  item={contentItems.find(item => item.id === activeId) as ContentItem} 
-                  onEdit={() => {}}
-                  draggable={false}
-                  isDragging={true}
-                />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+          <DragOverlay dropAnimation={dropAnimationConfig}>
+            {activeId ? (
+              <ContentCard 
+                item={contentItems.find(item => item.id === activeId) as ContentItem} 
+                onEdit={() => {}}
+                draggable={false}
+                isDragging={true}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
         </>
       )}
 

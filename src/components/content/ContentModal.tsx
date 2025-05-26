@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ContentItem, Platform, Platforms, Status, Department } from '@/lib/database.types';
+import { RatingDisplay } from '../rating/RatingDisplay';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ContentModalProps {
   onDelete?: (id: string) => void;
   initialData?: Partial<ContentItem>;
   mode: 'add' | 'edit';
+  userId?: string; // Add userId prop for rating functionality
 }
 
 const PLATFORM_OPTIONS: Platform[] = ['LinkedIn', 'Website'];
@@ -22,9 +24,11 @@ export const ContentModal: React.FC<ContentModalProps> = ({
   onSave,
   onDelete,
   initialData,
-  mode
+  mode,
+  userId = 'anonymous' // Default to 'anonymous' if userId is not provided
 }) => {
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'ratings'>('details');
   
   const getInitialFormData = (): Partial<ContentItem> => ({
     title: '',
@@ -63,6 +67,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
       }
       setUrlError(null); // Reset URL error when modal opens/re-initializes
       setConfirmDelete(false); // Reset delete confirmation when modal opens
+      setActiveTab('details'); // Reset to details tab when modal opens
     }
   }, [isOpen, initialData, mode]);
 
@@ -80,7 +85,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
     if (name === 'department') {
       setFormData(prev => ({ ...prev, [name]: value === '' ? undefined : value as Department }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -160,6 +165,40 @@ export const ContentModal: React.FC<ContentModalProps> = ({
           </h2>
         </div>
 
+        {/* Tabs - Only show in edit mode and when we have an ID */}
+        {mode === 'edit' && formData.id && (
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-6 py-3 text-sm font-medium ${
+                  activeTab === 'details'
+                    ? 'border-b-2 border-brand-red text-brand-red'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Details
+              </button>
+              <button
+                onClick={() => setActiveTab('ratings')}
+                className={`px-6 py-3 text-sm font-medium ${
+                  activeTab === 'ratings'
+                    ? 'border-b-2 border-brand-red text-brand-red'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Ratings
+                {formData.total_ratings ? (
+                  <span className="ml-2 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                    {formData.total_ratings}
+                  </span>
+                ) : null}
+              </button>
+            </nav>
+          </div>
+        )}
+
+        {activeTab === 'details' ? (
         <form onSubmit={handleSubmit} className="p-6">
           <div className="mb-5">
             <label htmlFor="title" className="block text-sm font-medium text-brand-dark mb-1">
@@ -191,7 +230,7 @@ export const ContentModal: React.FC<ContentModalProps> = ({
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
             <div>
               <label className="block text-sm font-medium text-brand-dark mb-1">
                 Platforms
@@ -235,28 +274,28 @@ export const ContentModal: React.FC<ContentModalProps> = ({
             </div>
           </div>
 
-          <div className="mb-5">
-            <label htmlFor="department" className="block text-sm font-medium text-brand-dark mb-1">
-              Department
-            </label>
-            <select
-              id="department"
-              name="department"
-              value={formData.department || ''}
-              onChange={handleChange}
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
-            >
-              <option value="">Select a department (optional)</option>
-              {DEPARTMENT_OPTIONS.map(department => (
-                <option key={department} value={department}>
-                  {department}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-brand-medium">
-              Tag this content with a specific business department
-            </p>
-          </div>
+            <div className="mb-5">
+              <label htmlFor="department" className="block text-sm font-medium text-brand-dark mb-1">
+                Department
+              </label>
+              <select
+                id="department"
+                name="department"
+                value={formData.department || ''}
+                onChange={handleChange}
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:ring-brand-primary focus:border-brand-primary"
+              >
+                <option value="">Select a department (optional)</option>
+                {DEPARTMENT_OPTIONS.map(department => (
+                  <option key={department} value={department}>
+                    {department}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-brand-medium">
+                Tag this content with a specific business department
+              </p>
+            </div>
 
           <div className="mb-5">
             <label htmlFor="target_date" className="block text-sm font-medium text-brand-dark mb-1">
@@ -366,6 +405,22 @@ export const ContentModal: React.FC<ContentModalProps> = ({
             </div>
           </div>
         </form>
+        ) : (
+          <div className="p-6">
+            {formData.id && (
+              <RatingDisplay contentItem={formData as ContentItem} userId={userId} />
+            )}
+            <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

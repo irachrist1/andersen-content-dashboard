@@ -6,6 +6,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { PreviewModal } from './PreviewModal';
 import { PlatformBadge } from './PlatformBadge';
 import { DepartmentBadge } from './DepartmentBadge';
+import { StarRating } from '../rating/StarRating';
 
 interface ContentCardProps {
   item: ContentItem;
@@ -77,7 +78,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         
         <div className="flex flex-wrap justify-between items-center gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <PlatformBadge platform={item.platform} />
+          <PlatformBadge platform={item.platform} />
             {item.department && (
               <DepartmentBadge department={item.department} variant="compact" />
             )}
@@ -92,6 +93,18 @@ export const ContentCard: React.FC<ContentCardProps> = ({
               )}
             </div>
           )}
+        </div>
+        
+        {/* Always display rating section for debugging */}
+        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2">
+          <div>
+            <StarRating 
+              rating={item.average_rating || 0} 
+              readonly 
+              size="small" 
+              showValue 
+            />
+          </div>
         </div>
       </div>
 

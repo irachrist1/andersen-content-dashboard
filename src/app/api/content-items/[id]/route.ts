@@ -36,10 +36,10 @@ function validateContentItem(data: Partial<ContentItem>): string[] {
   return errors;
 }
 
-// Helper to check if a UUID is valid
-function isValidUUID(id: string) {
+// Helper to validate UUID format
+function isValidUUID(uuid: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(id);
+  return uuidRegex.test(uuid);
 }
 
 // GET /api/content-items/[id] - Retrieve a specific content item
@@ -58,7 +58,25 @@ export async function GET(
     
     const { data, error } = await supabase
       .from('content_items')
-      .select('*')
+      .select(`
+        *,
+        id,
+        title,
+        description,
+        platform,
+        status,
+        post_url,
+        suggested_post_time,
+        post_date,
+        target_date,
+        department,
+        sort_order,
+        average_rating,
+        total_ratings,
+        publication_eligible,
+        created_at,
+        updated_at
+      `)
       .eq('id', id)
       .single();
     
