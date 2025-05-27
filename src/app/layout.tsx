@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: "ContentFlow",
-  description: "A content planning and management application",
+  description: "From Idea to Published Content in less time with a little help from AI",
   icons: {
     icon: '/images/Picture12.png',
   },
